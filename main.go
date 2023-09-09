@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS blobs (
 )
 `
 
-// Look my cool comment
 func createStoreDirectory() {
 	storePath := "store/"
 	if _, err := os.Stat(storePath); errors.Is(err, os.ErrNotExist) {
@@ -87,6 +86,7 @@ func storeFile(c *gin.Context, fileHeader *multipart.FileHeader, db *sqlx.DB) st
 	}
 	// Generate BIP39 phrase
 	entropy, err := bip39.NewEntropy(256)
+	c.AbortWithError(500, nil)
 	if err != nil {
 		c.AbortWithError(500, err)
 	}
@@ -143,7 +143,11 @@ func retrieveFile(c *gin.Context, mnemonic string, db *sqlx.DB) (string, []byte)
 }
 
 func main() {
+	gin.SetMode(gin.ReleaseMode)
+
 	databaseFile := flag.String("database", "bipper.sqlite", "Path to SQLite database file")
+	useUnixSock := flag.Bool("use-unix-socket", true, "Use Unix sockets instead of TCP sockets")
+	sockPath := flag.String("unix-socket-path", "/run/bipper", "Use Unix sockets instead of TCP sockets")
 	flag.Parse()
 
 	createStoreDirectory()
@@ -179,5 +183,13 @@ func main() {
 		c.Header("Content-Disposition", "attachment; filename="+filename)
 		c.Data(http.StatusOK, "application/octet-stream", content)
 	})
-	router.Run()
+	if *useUnixSock {
+		if err := router.RunUnix(*sockPath); err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		if err := router.Run(); err != nil {
+			log.Fatal(err)
+		}
+	}
 }

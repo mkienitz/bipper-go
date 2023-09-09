@@ -31,7 +31,7 @@
           default = pkgs.buildGoModule {
             name = "bipper";
             src = gitignore.lib.gitignoreSource ./.;
-            vendorSha256 = "sha256-Ulc8pkHQN8msO+yl58CVbQDOGan7ch65TSsTqDJbTTg=";
+            vendorHash = "sha256-Ulc8pkHQN8msO+yl58CVbQDOGan7ch65TSsTqDJbTTg=";
           };
         };
       }
